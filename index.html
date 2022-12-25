@@ -1,0 +1,295 @@
+<html>
+    <head>
+        <title>Tic-Tac-Rando</title>
+        <script lang="javascript">
+            var CURRENT = '';
+            const X = 'X';
+            const X_COLOR = 'red';
+            const O = 'O';
+            const O_COLOR = 'green'
+            const DRAW_COLOR = 'orange';
+            var GAME_ON = true;
+            const SQUARE_IDS = ['ul', 'uc', 'ur', 'ml', 'mc', 'mr', 'll', 'lc', 'lr'];
+            var BOARD = ['', '', '', '', '', '', '', '', ''];
+
+            function computerMove() {
+                validMoves = [];
+                for (var i = 0; i < 9; i++) {
+                    if (BOARD[i] == '') {
+                        validMoves.push(i);
+                    }
+                }
+                
+                // go for win
+                for (var i = 0; i < validMoves.length; i++) {
+                    tmpBoard = [...BOARD];
+                    moveTo = validMoves[i];
+                    tmpBoard[moveTo] = CURRENT;
+                    if (findWinner(tmpBoard) == CURRENT) {
+                        BOARD[moveTo] = CURRENT;
+                        document.getElementById(SQUARE_IDS[moveTo]).innerHTML = CURRENT;
+                        document.getElementById(SQUARE_IDS[moveTo]).style.color = 'white';
+                        return;
+                    }
+                }
+
+                // FIXME: we should try something clever here, but I don't want to bother
+                moveTo = validMoves[Math.floor(Math.random() * validMoves.length)];
+                BOARD[moveTo] = CURRENT;
+                document.getElementById(SQUARE_IDS[moveTo]).innerHTML = CURRENT;
+                document.getElementById(SQUARE_IDS[moveTo]).style.color = 'white';
+            }
+
+            function getIcon() {
+                if (Math.random() > 0.5) {
+                    return X;
+                }
+                return O;
+            }
+
+            function findWinner(board) {
+                const MAGIC = 15;
+                const SQUARE = [2, 7, 6, 9, 5, 1, 4, 3, 8];
+
+                for (var i = 0; i < 9; i++) {
+                    for (var j = 0; j < 9; j++) {
+                        for (var k = 0; k < 9; k++) {
+                            if ((i != j) && (i != k) && (j != k)) {
+                                if ((board[i] === board[j]) &&
+                                    (board[j] === board[k]) &&
+                                    (board[k] === X)) {
+                                    if ((SQUARE[i] + SQUARE[j] + SQUARE[k]) == MAGIC) {
+                                        return X;
+                                    }
+                                }
+
+                                if ((board[i] === board[j]) &&
+                                    (board[j] === board[k]) &&
+                                    (board[k] === O)) {
+                                    if ((SQUARE[i] + SQUARE[j] + SQUARE[k]) == MAGIC) {
+                                        return O
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // check for cat
+                draw = true;
+                for (var i = 0; i < 9; i++) {
+                    if (document.getElementById(SQUARE_IDS[i]).innerHTML === '') {
+                        draw = false;
+                        break;
+                    }
+                }
+                if (draw) {
+                    return 'cat';                    
+                }
+
+                return '';
+            }
+
+            function checkWin(playersMove) {
+                winner = findWinner(BOARD);
+                if (winner == X) {
+                    if (playersMove) {
+                        document.getElementById('victory').style.color = X_COLOR;
+                        document.getElementById('victory').innerHTML = 'YOU WIN!'
+                    } else {
+                        document.getElementById('victory').style.color = 'white';
+                        document.getElementById('victory').innerHTML = 'YOU LOSE!'
+                    }
+                    document.getElementById('restart').style.visibility = 'visible';
+                    GAME_ON = false;
+                } else if (winner == O) {
+                    if (playersMove) {
+                        document.getElementById('victory').style.color = O_COLOR;
+                        document.getElementById('victory').innerHTML = 'YOU WIN!'
+                    } else {
+                        document.getElementById('victory').style.color = 'white';
+                        document.getElementById('victory').innerHTML = 'YOU LOSE!'
+                    }
+                    document.getElementById('restart').style.visibility = 'visible';
+                    GAME_ON = false;
+                } else if (winner === '') {
+                    // keep playing
+                } else {
+                    document.getElementById('victory').style.color = DRAW_COLOR;
+                    document.getElementById('victory').innerHTML = 'CAT WINS! 😼'
+                    document.getElementById('restart').style.visibility = 'visible';
+                    GAME_ON = false;
+                }
+            }
+
+            function move(ele) {
+                if (!GAME_ON) {
+                    return;
+                }
+
+                if (ele.innerHTML != '') {
+                    alert("Invalid Move");
+                    return;
+                }
+
+                ele.innerHTML = CURRENT;
+                if (CURRENT == X) {
+                    ele.style.color = X_COLOR;
+                } else {
+                    ele.style.color = O_COLOR;
+                }
+
+                // update model
+                for (var i = 0; i < 9; i++) {
+                    if (ele.id === SQUARE_IDS[i]) {
+                        BOARD[i] = CURRENT
+                    }
+                }
+                // check for end condition
+                checkWin(true);
+                if (GAME_ON) {
+                    CURRENT = getIcon();
+                    updateCurrent(CURRENT);
+                    computerMove();
+                    checkWin(false);
+                }
+            }
+
+            function updateCurrent(icon) {
+                document.getElementById("next").innerHTML = CURRENT;
+                if (CURRENT == X) {
+                    document.getElementById("next").style.color = X_COLOR;
+                } else {
+                    document.getElementById("next").style.color = O_COLOR;
+                }
+            }
+
+            function start() {
+                BOARD = ['', '', '', '', '', '', '', '', ''];
+                document.getElementById('restart').style.visibility = 'hidden';
+                document.getElementById('victory').innerHTML = '';     
+                GAME_ON = true;
+                CURRENT = getIcon();
+                updateCurrent(CURRENT);
+                cells = document.getElementsByTagName('td');
+                for (i = 0; i < cells.length; i++) {
+                    cells[i].innerHTML = '';
+                }
+            }
+        </script>
+        <style lang="text/css">
+            :root {
+                --board-line-width: 5px;
+            }
+            body {
+                margin-top: 5em;
+                background-color: rgb(35, 50, 50);
+                color: bisque;
+                font-family: sans-serif;
+                text-align: center;
+            }
+            p {
+                margin-bottom: 2em;
+            }
+            table {
+                margin-top: 2em;
+                margin-left: auto;
+                margin-right: auto;
+                margin-bottom: 2em;
+            }
+            td {
+                height: 4em;
+                width: 4em;
+                text-align: center;
+                border-color: bisque;
+                font-size: 24px;
+            }
+            td#ul {
+                border-width: 0px;
+                border-bottom-width: var(--board-line-width);
+                border-right-width: var(--board-line-width);
+                border-style: solid;
+            }
+            td#uc {
+                border-width: 0px;
+                border-bottom-width: var(--board-line-width);
+                border-left-width: var(--board-line-width);
+                border-right-width: var(--board-line-width);
+                border-style: solid;
+            }
+            td#ur {
+                border-width: 0px;
+                border-bottom-width: var(--board-line-width);
+                border-left-width: var(--board-line-width);
+                border-style: solid;
+            }
+            td#ml {
+                border-width: 0px;
+                border-top-width: var(--board-line-width);
+                border-bottom-width: var(--board-line-width);
+                border-right-width: var(--board-line-width);
+                border-style: solid;
+            }
+            td#mc {
+                border-width: 0px;
+                border-top-width: var(--board-line-width);
+                border-bottom-width: var(--board-line-width);
+                border-left-width: var(--board-line-width);
+                border-right-width: var(--board-line-width);
+                border-style: solid;
+            }
+            td#mr {
+                border-width: 0px;
+                border-top-width: var(--board-line-width);
+                border-bottom-width: var(--board-line-width);
+                border-left-width: var(--board-line-width);
+                border-style: solid;
+            }
+            td#ll {
+                border-width: 0px;
+                border-top-width: var(--board-line-width);
+                border-right-width: var(--board-line-width);
+                border-style: solid;
+            }
+            td#lc {
+                border-width: 0px;
+                border-top-width: var(--board-line-width);
+                border-left-width: var(--board-line-width);
+                border-right-width: var(--board-line-width);
+                border-style: solid;
+            }
+            td#lr {
+                border-width: 0px;
+                border-top-width: var(--board-line-width);
+                border-left-width: var(--board-line-width);
+                border-style: solid;
+            }
+            .whosemove {
+                font-size: larger;
+            }
+            #victory {
+                font-size: xx-large;
+            }
+        </style>
+    </head>
+    <body onload="start()">
+        <h1>Tic-Tac-Rando!</h1>
+        <h2>How To Play</h2>
+        <p>
+            It's just like normal tic-tac-toe, but this time, on every turn, you are randomly 
+            assigned either Xs or Os. Place third symbol in a line and you win!
+        </p>
+
+        <div class="whosemove">You Are: <span class="" id="next">@</span></div>
+
+        <table class="board">
+            <tr><td id="ul" onclick="move(this)">@</td><td id="uc" onclick="move(this)">@</td><td id="ur" onclick="move(this)">@</td></tr>
+            <tr><td id="ml" onclick="move(this)">@</td><td id="mc" onclick="move(this)">@</td><td id="mr" onclick="move(this)">@</td></tr>
+            <tr><td id="ll" onclick="move(this)">@</td><td id="lc" onclick="move(this)">@</td><td id="lr" onclick="move(this)">@</td></tr>
+        </table>
+
+        <div id="victory"></div>
+        <div><button id="restart" onclick="start()">Play Again</button></div>
+
+    </body>
+</html>
